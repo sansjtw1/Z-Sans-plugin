@@ -17,14 +17,14 @@ This repository is the official plugin repository for the **Z-Sans Asset Breedin
 
 | Plugin | Type | Language | Purpose | Dependencies |
 |--------|------|----------|---------|--------------|
-| [config_editor](#config_editor) | Directory | EN | Web-based visual editor for `breeding-config.yaml` (schema‑driven form, text‑level save, preserves comments) | Requires `--web` |
-| [domain_whois](#domain_whois) | Directory | EN | Enriches domain assets with WHOIS registration info via free global RDAP services | Network |
-| [ip_geo](#ip_geo) | Single‑file | EN | Queries IP geographic location via ip-api.com and writes to asset attributes | Network |
-| [ip_info_cn](#ip_info_cn) | Single‑file | zh_CN | Queries IP ownership via ip9.com.cn and outputs Chinese location information | Network |
-| [resource_collector](#resource_collector) | Single‑file | EN | Downloads discovered files/JS resources locally (under `run_dir`) | Network |
-| [security_headers](#security_headers) | Single‑file | EN | Probes HTTP security response headers of URL assets and scores them | Network |
-| [toolbox](#toolbox) | Directory | EN | Generic external tool manager (subfinder/naabu/EHole and custom tools), provides `--tools` | GitHub downloads |
-| [tools_manager](#tools_manager) | Directory | zh_CN | External tool manager (downloads pre‑built binaries and registers them into the engine), provides `--tools` | GitHub downloads |
+| [config_editor](config_editor/) | Directory | EN | Web-based visual editor for `breeding-config.yaml` (schema‑driven form, text‑level save, preserves comments) | Requires `--web` |
+| [domain_whois](domain_whois/) | Directory | EN | Enriches domain assets with WHOIS registration info via free global RDAP services | Network |
+| [ip_geo](ip_geo.py) | Single‑file | EN | Queries IP geographic location via ip-api.com and writes to asset attributes | Network |
+| [ip_info_cn](ip_info_cn.py) | Single‑file | zh_CN | Queries IP ownership via ip9.com.cn and outputs Chinese location information | Network |
+| [resource_collector](resource_collector.py) | Single‑file | EN | Downloads discovered files/JS resources locally (under `run_dir`) | Network |
+| [security_headers](security_headers.py) | Single‑file | EN | Probes HTTP security response headers of URL assets and scores them | Network |
+| [toolbox](toolbox/) | Directory | EN | Generic external tool manager (subfinder/naabu/EHole and custom tools), provides `--tools` | GitHub downloads |
+| [tools_manager](tools_manager/) | Directory | zh_CN | External tool manager (downloads pre‑built binaries and registers them into the engine), provides `--tools` | GitHub downloads |
 
 ## Mutual Exclusion
 

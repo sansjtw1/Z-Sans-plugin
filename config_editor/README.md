@@ -28,3 +28,5 @@ python3 main.py --web
 
 - This plugin does not attach any `on_*` scanning hooks; it only provides a frontend interface and does not affect scanning behavior.
 - The save target is the configuration file currently loaded by the web service (when running `main.py --web`, it is the root‑directory `breeding-config.yaml`).
+
+![example](example.png)

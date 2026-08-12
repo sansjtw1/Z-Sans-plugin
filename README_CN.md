@@ -17,14 +17,14 @@
 
 | 插件 | 类型 | 语言 | 作用 | 依赖 |
 |------|------|------|------|------|
-| [config_editor](#config_editor) | 目录插件 | EN | Web 可视化编辑 `breeding-config.yaml`（配置驱动表单，文本级保存，保留注释） | 需 `--web` |
-| [domain_whois](#domain_whois) | 目录插件 | EN | 通过免费全球化 RDAP 服务为域名资产补充 WHOIS 注册信息 | 网络 |
-| [ip_geo](#ip_geo) | 单文件 | EN | 通过 ip-api.com 查询 IP 资产的地理位置并写入属性 | 网络 |
-| [ip_info_cn](#ip_info_cn) | 单文件 | 中文 | 通过 ip9.com.cn 查询 IP 归属地，输出中文信息 | 网络 |
-| [resource_collector](#resource_collector) | 单文件 | EN | 下载扫描发现的文件/JS 资源到本地（run_dir 下） | 网络 |
-| [security_headers](#security_headers) | 单文件 | EN | 探测 URL 资产的 HTTP 安全响应头并评分 | 网络 |
-| [toolbox](#toolbox) | 目录插件 | EN | 通用外部工具管理器（subfinder/naabu/EHole 及自定义工具），提供 `--tools` | GitHub 下载 |
-| [tools_manager](#tools_manager) | 目录插件 | 中文 | 外部工具管理器（下载预编译二进制注册进引擎），提供 `--tools` | GitHub 下载 |
+| [config_editor](config_editor/) | 目录插件 | EN | Web 可视化编辑 `breeding-config.yaml`（配置驱动表单，文本级保存，保留注释） | 需 `--web` |
+| [domain_whois](domain_whois/) | 目录插件 | EN | 通过免费全球化 RDAP 服务为域名资产补充 WHOIS 注册信息 | 网络 |
+| [ip_geo](ip_geo.py) | 单文件 | EN | 通过 ip-api.com 查询 IP 资产的地理位置并写入属性 | 网络 |
+| [ip_info_cn](ip_info_cn.py) | 单文件 | 中文 | 通过 ip9.com.cn 查询 IP 归属地，输出中文信息 | 网络 |
+| [resource_collector](resource_collector.py) | 单文件 | EN | 下载扫描发现的文件/JS 资源到本地（run_dir 下） | 网络 |
+| [security_headers](security_headers.py) | 单文件 | EN | 探测 URL 资产的 HTTP 安全响应头并评分 | 网络 |
+| [toolbox](toolbox/) | 目录插件 | EN | 通用外部工具管理器（subfinder/naabu/EHole 及自定义工具），提供 `--tools` | GitHub 下载 |
+| [tools_manager](tools_manager/) | 目录插件 | 中文 | 外部工具管理器（下载预编译二进制注册进引擎），提供 `--tools` | GitHub 下载 |
 
 ## 互斥关系
 
