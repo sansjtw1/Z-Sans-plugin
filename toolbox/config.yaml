@@ -1,0 +1,40 @@
+# toolbox - default plugin configuration
+# ---------------------------------------------------------------
+# This file holds the plugin's out-of-the-box defaults. Effective values =
+# engine config (plugins.toolbox in breeding-config.yaml) layered over these.
+# See `python main.py --plugin-info toolbox` for the live state.
+
+# Provision missing tools automatically when a scan starts.
+# Default false: nothing is downloaded without explicit permission.
+# (`python main.py --tools enable` flips this to true in the breed config.)
+auto_install: false
+
+# Force-upgrade every installed tool before each scan.
+auto_update: false
+
+# Install directory. Relative paths are resolved against this plugin's folder;
+# defaults to <plugin>/tools.
+# dir: null
+
+# Extra arguments appended for a specific tool.
+extra_args:
+  # ehole: ["-json"]
+
+# Restrict management to this list; empty = manage every registered tool.
+enabled_tools: []
+
+# Register additional GitHub-released tools (name -> {repo, bin, label}).
+# These become fully manageable via `--tools` immediately.
+extra_tools:
+  # httpx:
+  #   repo: projectdiscovery/httpx
+  #   bin: httpx
+  #   label: HTTP probing
+  # gau:
+  #   repo: lc/gau
+  #   bin: gau
+  #   label: URL discovery from archives
+
+# GitHub mirror prefix for slow networks (also honoured via the
+# ZSANS_GITHUB_MIRROR environment variable).
+# mirror: null

@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Config Editor</title>
+<style>
+  :root {
+    --bg:#0f172a; --bg2:#1e293b; --card:#1e293b; --border:#334155;
+    --text:#e2e8f0; --text2:#94a3b8; --accent:#38bdf8; --accent2:#0ea5e9;
+    --ok:#4ade80; --err:#f87171; --warn:#fbbf24;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif; padding:20px; }
+  .top { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .top h1 { font-size:1.1rem; }
+  .top .src { font-size:.75rem; color:var(--text2); background:var(--bg2); border:1px solid var(--border); border-radius:6px; padding:4px 10px; }
+  .btn { background:var(--accent2); color:#fff; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-size:.85rem; font-weight:600; }
+  .btn:hover { background:var(--accent); }
+  .btn.ghost { background:transparent; color:var(--text2); border:1px solid var(--border); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  .group { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:16px; }
+  .group > .gtitle { font-size:.95rem; font-weight:700; color:var(--accent); margin-bottom:12px; }
+  .fields { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px 20px; }
+  .field { display:flex; flex-direction:column; gap:4px; }
+  .field.full { grid-column:1/-1; }
+  .field label { font-size:.8rem; color:var(--text2); font-weight:600; }
+  .field input[type=text], .field input[type=number], .field select, .field textarea {
+    background:var(--bg); border:1px solid var(--border); color:var(--text);
+    border-radius:6px; padding:7px 10px; font-size:.85rem; width:100%;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus { outline:none; border-color:var(--accent); }
+  .field textarea { font-family:monospace; resize:vertical; min-height:64px; }
+  .switch { position:relative; display:inline-block; width:44px; height:24px; }
+  .switch input { opacity:0; width:0; height:0; }
+  .switch .slider { position:absolute; cursor:pointer; inset:0; background:var(--border); border-radius:999px; transition:.2s; }
+  .switch .slider:before { content:''; position:absolute; height:18px; width:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s; }
+  .switch input:checked + .slider { background:var(--accent); }
+  .switch input:checked + .slider:before { transform:translateX(20px); }
+  .list-editor { display:flex; flex-direction:column; gap:6px; }
+  .list-editor .li { display:flex; gap:6px; }
+  .list-editor .li input { flex:1; }
+  .list-editor .li button { background:transparent; border:1px solid var(--border); color:var(--err); border-radius:6px; cursor:pointer; padding:0 10px; }
+  .list-editor .add { background:transparent; border:1px dashed var(--border); color:var(--accent); border-radius:6px; cursor:pointer; padding:6px; font-size:.8rem; }
+  .list-editor .add:hover { border-color:var(--accent); }
+  .custom-add { display:inline-flex; gap:6px; align-items:center; }
+  .custom-add input, .custom-add select {
+    background:var(--bg); border:1px solid var(--border); color:var(--text);
+    border-radius:6px; padding:6px 8px; font-size:.8rem;
+  }
+  .custom-add input:focus, .custom-add select:focus { outline:none; border-color:var(--accent); }
+  .custom-add .ca-ok { background:var(--accent); color:#fff; border:none; border-radius:6px; padding:6px 10px; cursor:pointer; font-size:.8rem; }
+  .custom-add .ca-cancel { background:transparent; color:var(--text2); border:1px solid var(--border); border-radius:6px; padding:6px 10px; cursor:pointer; font-size:.8rem; }
+  .nested { border-left:2px solid var(--border); margin-left:4px; padding-left:16px; margin-top:8px; }
+  .nested .ntitle { font-size:.8rem; font-weight:600; color:var(--text2); margin-bottom:8px; }
+  .statusbar { display:flex; gap:12px; align-items:center; margin-top:8px; min-height:20px; font-size:.85rem; }
+  .statusbar .ok { color:var(--ok); }
+  .statusbar .err { color:var(--err); }
+  .statusbar .warn { color:var(--warn); }
+  .empty { color:var(--text2); font-size:.85rem; padding:12px; }
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Config Editor</h1>
+  <span class="src" id="srcLabel">loading config file…</span>
+  <button class="btn ghost" onclick="reloadConfig()">Reload</button>
+  <button class="btn" onclick="saveConfig()" id="saveBtn">Save</button>
+</div>
+<div class="statusbar" id="statusbar"></div>
+<div id="root"></div>
+
+<script>
+const api = (path, opts) => fetch(path, opts).then(r => r.json());
+
+let CURRENT = {};
+let ORIGINAL = {};
+let DOTS = {};
+
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function init() {
+  document.getElementById('srcLabel').textContent = 'breeding-config.yaml (root)';
+  await loadConfig();
+}
+
+function status(msg, kind) {
+  document.getElementById('statusbar').innerHTML = '<span class="' + kind + '">' + esc(msg) + '</span>';
+}
+
+async function loadConfig() {
+  status('Reading config…', 'warn');
+  const d = await api('/api/config/json');
+  if (d.error) { status('Load failed: ' + d.error, 'err'); return; }
+  CURRENT = d.config || {};
+  ORIGINAL = deepClone(CURRENT);
+  render();
+  status('Loaded current values from breeding-config.yaml', 'ok');
+}
+
+async function reloadConfig() { await loadConfig(); }
+
+function deepClone(o) { return JSON.parse(JSON.stringify(o || {})); }
+
+function getPath(obj, dotted) {
+  let cur = obj;
+  for (const k of dotted.split('.')) {
+    if (cur && typeof cur === 'object' && k in cur) cur = cur[k];
+    else return undefined;
+  }
+  return cur;
+}
+
+function inferValue(key, value) {
+  if (value === null || value === undefined) return { key: key, type: 'string' };
+  if (typeof value === 'boolean') return { key: key, type: 'bool' };
+  if (typeof value === 'number') return { key: key, type: 'number' };
+  if (typeof value === 'string') return { key: key, type: 'string' };
+  if (Array.isArray(value)) return { key: key, type: 'list', item_type: 'string' };
+  const children = Object.keys(value).map(k => inferValue(k, value[k]));
+  return { key: key, type: 'object', children };
+}
+
+function render() {
+  DOTS = {};
+  const root = document.getElementById('root');
+  root.innerHTML = '';
+  const keys = Object.keys(CURRENT).sort();
+  if (!keys.length) {
+    root.innerHTML = '<div class="empty">breeding-config.yaml is empty.</div>';
+    return;
+  }
+  for (const k of keys) {
+    const val = CURRENT[k];
+    const isObj = val !== null && typeof val === 'object' && !Array.isArray(val);
+    const wrap = document.createElement('div');
+    wrap.className = 'group';
+    wrap.setAttribute('data-gpath', k);
+    const h = document.createElement('div');
+    h.className = 'gtitle';
+    h.textContent = k;
+    wrap.appendChild(h);
+    const fields = document.createElement('div');
+    fields.className = 'fields';
+    if (isObj) {
+      for (const sub of Object.keys(val)) {
+        fields.appendChild(renderField(inferValue(sub, val[sub]), k + '.' + sub, 0));
+      }
+    } else {
+      fields.appendChild(renderField(inferValue(k, val), k, 0));
+    }
+    const addRow = document.createElement('div');
+    addRow.className = 'field full';
+    addRow.innerHTML = '<button class="add" type="button" onclick="addCustomField(\'' + esc(k) + '\')">+ Add config item</button>';
+    fields.appendChild(addRow);
+    wrap.appendChild(fields);
+    root.appendChild(wrap);
+  }
+}
+
+function renderField(field, dotted, depth) {
+  const div = document.createElement('div');
+  div.className = 'field';
+  if (field.type === 'object') {
+    const inner = document.createElement('div');
+    inner.className = 'nested';
+    inner.setAttribute('data-path', dotted);
+    const t = document.createElement('div');
+    t.className = 'ntitle';
+    t.textContent = field.key;
+    inner.appendChild(t);
+    const sub = document.createElement('div');
+    sub.className = 'fields';
+    for (const c of field.children) {
+      sub.appendChild(renderField(c, dotted + '.' + c.key, depth + 1));
+    }
+    const addRow = document.createElement('div');
+    addRow.className = 'field full';
+    addRow.innerHTML = '<button class="add" type="button" onclick="addCustomField(\'' + esc(dotted) + '\')">+ Add config item</button>';
+    sub.appendChild(addRow);
+    inner.appendChild(sub);
+    div.appendChild(inner);
+    return div;
+  }
+
+  const label = document.createElement('label');
+  label.textContent = field.key;
+  div.appendChild(label);
+
+  const curVal = getPath(CURRENT, dotted);
+
+  if (field.type === 'bool') {
+    const l = document.createElement('label');
+    l.className = 'switch';
+    const inp = document.createElement('input');
+    inp.type = 'checkbox';
+    inp.checked = !!(curVal);
+    inp.onchange = () => { markChanged(dotted); };
+    const slider = document.createElement('span');
+    slider.className = 'slider';
+    l.appendChild(inp); l.appendChild(slider);
+    div.appendChild(l);
+    DOTS[dotted] = { el: inp, field };
+  } else if (field.type === 'list') {
+    const wrap = document.createElement('div');
+    wrap.className = 'list-editor';
+    const listDiv = document.createElement('div');
+    listDiv.id = 'list-' + dotted;
+    const arr = (curVal !== undefined && Array.isArray(curVal)) ? curVal.slice() : [];
+    renderList(listDiv, dotted, arr, field);
+    wrap.appendChild(listDiv);
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add';
+    addBtn.type = 'button';
+    addBtn.textContent = '+ Add';
+    addBtn.onclick = () => { addListItem(dotted, field); };
+    wrap.appendChild(addBtn);
+    div.appendChild(wrap);
+    DOTS[dotted] = { field, list: arr };
+  } else {
+    const inp = document.createElement('input');
+    if (field.type === 'number') {
+      inp.type = 'number';
+      inp.value = (curVal !== undefined && curVal !== null) ? curVal : '';
+    } else {
+      inp.type = 'text';
+      inp.value = (curVal !== undefined && curVal !== null) ? curVal : '';
+    }
+    inp.oninput = () => markChanged(dotted);
+    div.appendChild(inp);
+    DOTS[dotted] = { el: inp, field };
+  }
+
+  return div;
+}
+
+function renderList(container, dotted, arr, field) {
+  container.innerHTML = '';
+  const itemType = field.item_type || 'string';
+  arr.forEach((item, idx) => {
+    const row = document.createElement('div');
+    row.className = 'li';
+    const inp = document.createElement('input');
+    inp.type = (itemType === 'number' || itemType === 'integer') ? 'number' : 'text';
+    inp.value = item;
+    inp.oninput = () => { arr[idx] = parseListItem(inp.value, itemType); markChanged(dotted); };
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.textContent = '×';
+    del.title = 'Delete';
+    del.onclick = () => { arr.splice(idx, 1); renderList(container, dotted, arr, field); markChanged(dotted); };
+    row.appendChild(inp); row.appendChild(del);
+    container.appendChild(row);
+  });
+}
+
+function parseListItem(v, itemType) {
+  if (itemType === 'number' || itemType === 'integer') {
+    const n = Number(v);
+    return Number.isNaN(n) ? 0 : n;
+  }
+  return v;
+}
+
+function addListItem(dotted, field) {
+  const d = DOTS[dotted];
+  if (!d || !Array.isArray(d.list)) d.list = [];
+  const itemType = field.item_type || 'string';
+  d.list.push(itemType === 'number' || itemType === 'integer' ? 0 : '');
+  const container = document.getElementById('list-' + dotted);
+  renderList(container, dotted, d.list, field);
+  markChanged(dotted);
+}
+
+function addCustomField(parentPrefix) {
+  const btn = document.activeElement;
+  const form = document.createElement('span');
+  form.className = 'custom-add';
+  form.innerHTML =
+    '<input class="ca-key" type="text" placeholder="key" title="field name">' +
+    '<select class="ca-type"><option value="string">string</option>' +
+    '<option value="number">number</option><option value="bool">bool</option>' +
+    '<option value="list">list</option></select>' +
+    '<button type="button" class="ca-ok">OK</button>' +
+    '<button type="button" class="ca-cancel">Cancel</button>';
+  if (btn && btn.insertAdjacentElement) {
+    btn.insertAdjacentElement('afterend', form);
+  } else {
+    (document.querySelector('.fields:last-of-type') || document.getElementById('root')).appendChild(form);
+  }
+  const keyInp = form.querySelector('.ca-key');
+  keyInp.focus();
+  const dismiss = () => form.remove();
+
+  form.querySelector('.ca-cancel').onclick = dismiss;
+  form.querySelector('.ca-ok').onclick = () => {
+    const key = keyInp.value.trim();
+    const type = form.querySelector('.ca-type').value;
+    if (!key || !/^[A-Za-z0-9_.-]+$/.test(key)) {
+      keyInp.style.borderColor = 'var(--err)';
+      keyInp.placeholder = 'Only letters, numbers, . _ - allowed';
+      return;
+    }
+    const dotted = parentPrefix ? parentPrefix + '.' + key : key;
+    const field = { key: key, type: type, title: key };
+    if (type === 'list') {
+      field.item_type = 'string';
+    }
+    const parentWrap = findNestedWrap(parentPrefix);
+    let host;
+    if (parentWrap) {
+      host = parentWrap.querySelector('.fields');
+    } else {
+      const card = closestCard(btn);
+      host = card ? card.querySelector('.fields') : (document.querySelector('.fields:last-of-type') || document.getElementById('root'));
+    }
+    if (!host) host = document.getElementById('root');
+    const tmp = document.createElement('div');
+    tmp.id = 'custom-' + dotted;
+    tmp.className = 'field';
+    host.appendChild(tmp);
+    tmp.appendChild(renderField(field, dotted, 0));
+    markChanged(dotted);
+    form.remove();
+  };
+  keyInp.addEventListener('keydown', e => { if (e.key === 'Enter') form.querySelector('.ca-ok').click(); });
+}
+
+function closestCard(btn) {
+  let n = btn;
+  while (n && n !== document.body) {
+    if (n.classList && n.classList.contains('group')) return n;
+    n = n.parentElement;
+  }
+  return null;
+}
+
+function findNestedWrap(dotted) {
+  if (!dotted) return null;
+  const els = document.querySelectorAll('.nested');
+  for (const el of els) {
+    if (el.getAttribute('data-path') === dotted) return el;
+  }
+  return null;
+}
+
+function markChanged(dotted) {
+  const el = document.getElementById('saveBtn');
+  el.disabled = false;
+  el.textContent = 'Save *';
+}
+
+function collectValue(dotted) {
+  const d = DOTS[dotted];
+  if (!d) return undefined;
+  if (d.list) return d.list.slice();
+  if (!d.el) return undefined;
+  const f = d.field || {};
+  if (f.type === 'bool') return d.el.checked;
+  if (f.type === 'number') {
+    const n = Number(d.el.value);
+    return Number.isNaN(n) ? 0 : n;
+  }
+  const v = d.el.value;
+  if (v === '') {
+    const orig = getPath(ORIGINAL, dotted);
+    if (typeof orig !== 'string' && orig !== undefined) return null;
+  }
+  return v;
+}
+
+function buildUpdates() {
+  const updates = {};
+  for (const dotted in DOTS) {
+    const val = collectValue(dotted);
+    if (val === undefined || val === null) continue;
+    const orig = getPath(ORIGINAL, dotted);
+    if (JSON.stringify(val) !== JSON.stringify(orig)) {
+      updates[dotted] = val;
+    }
+  }
+  return updates;
+}
+
+async function saveConfig() {
+  const updates = buildUpdates();
+  const keys = Object.keys(updates);
+  if (!keys.length) { status('No changes to save', 'warn'); return; }
+  status('Saving ' + keys.length + ' changes…', 'warn');
+  const d = await api('/api/config/patch', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ updates })
+  });
+  if (d.ok) {
+    status('Saved ' + (d.applied ? d.applied.length : keys.length) + ' changes to breeding-config.yaml', 'ok');
+    document.getElementById('saveBtn').textContent = 'Save';
+    document.getElementById('saveBtn').disabled = true;
+    await loadConfig();
+  } else {
+    status('Save failed: ' + (d.error || 'unknown'), 'err');
+  }
+}
+
+init();
+</script>
+</body>
+</html>

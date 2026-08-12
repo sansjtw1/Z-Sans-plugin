@@ -1,0 +1,42 @@
+# tools_manager 插件默认配置
+# ---------------------------------------------------------------
+# 本文件是插件的"出厂默认配置",随插件目录走,用于集中描述全部可配置项。
+# 实际生效值 = 引擎配置(breeding-config.yaml 的 plugins.tools_manager)
+# 覆盖本文件同名项; 引擎未配置的项回落到本文件默认值。
+# 用 `python main.py --plugin-info tools_manager` 可查看当前生效项。
+
+# 是否在扫描启动时对缺失的外部工具自动补全安装(需先 --tools enable)。
+# 默认 false,避免未经许可下载。
+auto_install: false
+
+# 每次扫描前对已安装工具强制升级到最新版。
+auto_update: false
+
+# 外部工具下载安装目录(相对本插件目录或绝对路径)。默认: <本插件目录>/tools
+# dir: tools
+
+# 给指定工具追加命令行参数(引擎配置同名项会覆盖)。
+# extra_args:
+#   ehole: ["-json"]
+
+# 只管理这里列出的外部工具(留空 = 管理全部)。
+# enabled_tools:
+#   - subfinder
+#   - naabu
+#   - ehole
+
+# 追加自定义工具(name -> {repo,bin,label,source,...})。
+#   - 有 repo:  GitHub 下载型,可用 --tools install/update/remove 管理
+#   - source: path  系统 PATH / 本地目录工具,仅检测存在与版本,不下载不卸载
+# extra_tools:
+#   httpx:
+#     repo: projectdiscovery/httpx
+#     bin: httpx
+#     label: HTTP 探测
+#   nuclei:
+#     source: path
+#     bin: nuclei
+#     label: 漏洞扫描(系统 PATH)
+
+# GitHub 镜像前缀(国内网络加速,亦可设环境变量 ZSANS_GITHUB_MIRROR)。
+# mirror: null
