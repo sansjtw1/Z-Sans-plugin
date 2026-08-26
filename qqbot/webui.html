@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>qqbot 插件配置 · Z-Sans</title>
+<style>
+  :root {
+    --bg: #0f1420; --bg2: #151c2c; --bg3: #1b2438; --line: #26314a;
+    --text: #dbe4f3; --text2: #8494b3; --accent: #4da3ff; --accent2: #37d0a0;
+    --danger: #ff6b6b; --warn: #ffb454; --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 14px/1.6 -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 20px 18px 80px; }
+  h1 { font-size: 20px; margin: 6px 0 2px; display: flex; align-items: center; gap: 10px;}
+  .sub { color: var(--text2); font-size: 12px; margin-bottom: 18px; }
+  .card { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--radius);
+          padding: 16px 18px; margin-bottom: 16px; }
+  .card > h2 { font-size: 15px; margin: 0 0 12px; color: var(--accent);
+               border-bottom: 1px dashed var(--line); padding-bottom: 8px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  label.f { display: block; font-size: 12px; color: var(--text2); }
+  label.f b { color: var(--text); font-weight: 600; display:block; margin-bottom: 4px;}
+  input[type=text], input[type=number], input[type=password], textarea, select {
+      width: 100%; background: var(--bg3); color: var(--text); border: 1px solid var(--line);
+      border-radius: 6px; padding: 7px 10px; font-size: 13px; outline: none; }
+  input:focus, textarea:focus { border-color: var(--accent); }
+  textarea { min-height: 64px; resize: vertical; font-family: inherit; }
+  .hint { font-size: 11px; color: var(--text2); margin-top: 4px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .checks { display: flex; gap: 14px; flex-wrap: wrap; }
+  .checks label { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;}
+  button { background: var(--accent); border: none; color: #06111f; padding: 9px 22px;
+           border-radius: 7px; font-weight: 700; font-size: 13px; cursor: pointer; }
+  button:hover { filter: brightness(1.1); }
+  button:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+  button.ghost { background: transparent; color: var(--text2); border: 1px solid var(--line); font-weight: 500;}
+  button.ghost:hover { color: var(--text); border-color: var(--accent);}
+  .pwd { position: relative; }
+  .pwd .eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+              cursor: pointer; user-select:none; font-size: 12px; color: var(--text2); }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--text2); font-weight: 500; }
+  .tag { padding: 1px 8px; border-radius: 99px; font-size: 11px; }
+  .running   { background:#3a2f12; color: var(--warn); }
+  .completed { background:#12331f; color: var(--accent2); }
+  .failed    { background:#391a1a; color: var(--danger); }
+  .stopped   { background:#232a3d; color: var(--text2); }
+  .toast { position: fixed; right: 20px; bottom: 24px; background: var(--bg3); color: var(--text);
+           border: 1px solid var(--line); border-left: 3px solid var(--accent2);
+           padding: 10px 16px; border-radius: 8px; opacity: 0; transform: translateY(8px);
+           transition: all .25s; pointer-events: none; max-width: 420px;}
+  .toast.show { opacity: 1; transform: none; }
+  .toast.err  { border-left-color: var(--danger); }
+  .bar { position: sticky; top: 0; z-index: 5; background: rgba(15,20,32,.92); backdrop-filter: blur(6px);
+         padding: 12px 0; display:flex; justify-content: space-between; align-items:center;
+         border-bottom: 1px solid var(--line); margin-bottom: 16px;}
+  code.kbd { background: var(--bg3); border: 1px solid var(--line); padding: 1px 7px;
+             border-radius: 5px; font-size: 12px; color: var(--accent2);}
+  .empty { color: var(--text2); font-size: 12px; padding: 8px 2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="bar">
+    <div>
+      <h1>🤖 qqbot 插件配置</h1>
+      <div class="sub">通过 QQ 官方机器人（nonebot-adapter-qq）操控 Z-Sans：启动/终止扫描并回传报告。
+        首次启动 <code class="kbd">python main.py --qqbot</code> 后即可在此页面配置并热启机器人。</div>
+    </div>
+    <button id="saveBtn">💾 保存配置</button>
+  </div>
+
+  <!-- 凭据 -->
+  <div class="card">
+    <h2>① QQ 开放平台凭据 <span style="color:var(--text2);font-weight:400;font-size:12px">（q.qq.com → 开发设置）</span></h2>
+    <div class="grid">
+      <label class="f"><b>AppID（app_id）✱必填</b><input type="text" data-path="app_id" placeholder="如 123456789"></label>
+      <label class="f pwd"><b>AppSecret / clientSecret（app_secret）✱必填</b><input type="password" data-path="app_secret" placeholder="开发设置页的「机器人密钥」"><span class="eye">👁</span></label>
+      <label class="f pwd"><b>Token（选填，不参与鉴权）</b><input type="password" data-path="token" placeholder="留空即可"><span class="eye">👁</span></label>
+    </div>
+    <div class="hint">🔐 access_token 无需手工获取：启动时插件会调用官方
+      <code class="kbd">getAppAccessToken</code> 接口自动换取（有效期 7200 秒）并自动续期；
+      启动前还会做一次鉴权自检，凭据错误会直接提示原因。</div>
+    <div class="checks" style="margin-top:10px">
+      <label><input type="checkbox" data-path="sandbox"> 沙箱环境（未上线时勾选）</label>
+      <label><input type="checkbox" data-path="use_websocket"> WebSocket 反向连接（推荐；取消则用 WebHook 回调）</label>
+      <label><input type="checkbox" data-path="auth_check"> 启动前鉴权自检</label>
+    </div>
+    <div class="hint" style="margin-top:8px">鉴权端点 auth_base（一般无需修改）：</div>
+    <input type="text" data-path="auth_base">
+    <div class="hint">订阅意图（WebSocket 模式生效）：群聊@与单聊消息必须开启 c2c_group_at_messages 才能收到「扫描」等指令。</div>
+    <div class="checks" style="margin-top:8px" id="intentChecks"></div>
+  </div>
+
+  <!-- 机器人控制 -->
+  <div class="card" id="botControlCard">
+    <h2>🤖 机器人控制</h2>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div id="botStatus" style="font-size:14px;color:var(--text2)">状态检查中…</div>
+      <button id="botStartBtn" disabled onclick="botAction('start')">▶ 启动机器人</button>
+      <button id="botStopBtn" disabled class="ghost" onclick="botAction('stop')" style="display:none">⏹ 停止机器人</button>
+    </div>
+    <div class="hint" style="margin-top:10px">
+      启动机器人前请先填写上方凭据并保存。机器人将以子进程方式运行，Web 服务不受影响。
+      停止后可随时重新启动，无需重启整个进程。
+    </div>
+  </div>
+
+  <!-- 服务 -->
+  <div class="card">
+    <h2>② 本地服务</h2>
+    <div class="grid">
+      <label class="f"><b>Web 服务地址 web_host</b><input type="text" data-path="web_host"></label>
+      <label class="f"><b>Web 端口 web_port（zsansapi 自动拉起）</b><input type="number" data-path="web_port"></label>
+      <label class="f pwd"><b>Web 访问口令 web_password</b><input type="password" data-path="web_password" placeholder="为空则无鉴权，不建议"><span class="eye">👁</span></label>
+      <label class="f"><b>NoneBot 监听 bot_host</b><input type="text" data-path="bot_host"></label>
+      <label class="f"><b>NoneBot 端口 bot_port</b><input type="number" data-path="bot_port"></label>
+    </div>
+    <div class="hint">命令行可用 <code class="kbd">--port</code>/<code class="kbd">--host</code> 覆盖 Web 端口/地址，
+      <code class="kbd">--qqbot-port</code> 覆盖 NoneBot 端口（优先级高于本页配置）。</div>
+  </div>
+
+  <!-- 权限 -->
+  <div class="card">
+    <h2>③ 权限控制 <span style="color:var(--text2);font-weight:400;font-size:12px">（每行一个 ID；留空 = 不限制）</span></h2>
+    <div class="grid">
+      <label class="f"><b>允许的用户 allowed_users</b><textarea data-list="allowed_users" placeholder="用户 openid / uid"></textarea></label>
+      <label class="f"><b>管理员 admins（可停任意任务）</b><textarea data-list="admins"></textarea></label>
+      <label class="f"><b>允许的群/频道 allowed_groups</b><textarea data-list="allowed_groups" placeholder="群 openid / 频道 id"></textarea></label>
+    </div>
+    <div class="hint">提示：在 QQ 里给机器人发一条消息，日志中会打印该用户/群的 openid，复制到这里即可精确授权。</div>
+  </div>
+
+  <!-- 指令词 -->
+  <div class="card">
+    <h2>④ 自定义指令词 <span style="color:var(--text2);font-weight:400;font-size:12px">（多个别名用逗号分隔）</span></h2>
+    <div class="grid" id="cmdGrid"></div>
+    <div class="hint">示例：<code class="kbd" id="scanPreview">扫描 example.com --depth 3</code></div>
+  </div>
+
+  <!-- 扫描默认值 & 通知 -->
+  <div class="card">
+    <h2>⑤ 扫描默认值与通知</h2>
+    <div class="grid">
+      <label class="f"><b>默认深度 depth（留空跟随主配置）</b><input type="number" data-path="defaults.depth" min="1" max="10"></label>
+      <label class="f"><b>默认策略 strategy</b>
+        <select data-path="defaults.strategy">
+          <option value="">（跟随主配置 priority_based）</option>
+          <option value="priority_based">priority_based 基于优先级</option>
+          <option value="depth_first">depth_first 深度优先</option>
+          <option value="breadth_first">breadth_first 广度优先</option>
+          <option value="time_based">time_based 时间优先</option>
+        </select></label>
+      <label class="f"><b>轮询间隔 poll_interval（秒）</b><input type="number" data-path="poll_interval" min="1" max="120"></label>
+      <label class="f"><b>跟踪超时 scan_timeout_hours（小时）</b><input type="number" data-path="scan_timeout_hours" min="1"></label>
+      <label class="f"><b>报告资产样例上限 max_report_assets</b><input type="number" data-path="max_report_assets" min="1" max="30"></label>
+      <label class="f"><b>完成推送</b>
+        <label class="checks"><input type="checkbox" data-path="notify.on_complete"> 扫描结束后把报告推送到发起会话</label></label>
+    </div>
+  </div>
+
+  <!-- 回复模板 -->
+  <div class="card">
+    <h2>⑥ 自定义回复模板 <span style="color:var(--text2);font-weight:400;font-size:12px">（占位符见 README；改坏占位符时会自动回退原文）</span></h2>
+    <div class="grid" id="msgGrid"></div>
+  </div>
+
+  <!-- 任务面板 -->
+  <div class="card">
+    <h2>📡 当前扫描任务
+      <button class="ghost" id="refreshTasks" style="margin-left:auto;padding:4px 12px;font-size:12px">刷新</button>
+    </h2>
+    <table id="taskTable">
+      <thead><tr><th>ID</th><th>状态</th><th>种子</th><th>开始时间</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="empty" id="taskEmpty" hidden>暂无任务</div>
+  </div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+// ── 出厂默认（与 config.yaml 保持一致；仅作表单兜底，保存以页面值为准）──
+const DEFAULTS = {
+  enabled: true,
+  app_id: "", token: "", app_secret: "",
+  auth_base: "https://api.bot.qq.com/app/getAppAccessToken",
+  auth_check: true,
+  startup_retries: 3,
+  sandbox: false, use_websocket: true,
+  intents: { c2c_group_at_messages: true, at_messages: true,
+             guild_messages: false, direct_message: false },
+  web_host: "127.0.0.1", web_port: 8050, web_password: "",
+  bot_host: "127.0.0.1", bot_port: 8078,
+  allowed_users: [], admins: [], allowed_groups: [],
+  defaults: { depth: null, strategy: null },
+  poll_interval: 5, scan_timeout_hours: 24,
+  notify: { on_complete: true },
+  max_report_assets: 10,
+  commands: { help: ["帮助","help"], scan: ["扫描","scan"], stop: ["停止","stop"],
+              status: ["状态","status"], tasks: ["任务","tasks"], report: ["报告","report"] },
+};
+
+const INTENT_LABELS = [
+  ["c2c_group_at_messages", "群聊@ + 单聊消息"],
+  ["at_messages", "频道@机器人"],
+  ["guild_messages", "频道消息(私域)"],
+  ["direct_message", "频道私信"],
+];
+const CMD_LABELS = [
+  ["scan", "启动扫描"], ["stop", "终止扫描"], ["status", "查询进度"],
+  ["tasks", "任务列表"], ["report", "获取报告"], ["help", "帮助"],
+];
+
+let state = {};
+
+// ── 工具 ─────────────────────────────────────────────
+function deepMerge(base, over) {
+  const out = Array.isArray(base) ? [...base] : {...base};
+  for (const k of Object.keys(over || {})) {
+    const v = over[k];
+    if (v && typeof v === "object" && !Array.isArray(v) &&
+        base[k] && typeof base[k] === "object" && !Array.isArray(base[k]))
+      out[k] = deepMerge(base[k], v);
+    else out[k] = v;
+  }
+  return out;
+}
+function getPath(obj, path) {
+  return path.split(".").reduce((o, k) => (o == null ? undefined : o[k]), obj);
+}
+function setPath(obj, path, val) {
+  const ks = path.split("."); let o = obj;
+  for (let i = 0; i < ks.length - 1; i++) { if (!o[ks[i]]) o[ks[i]] = {}; o = o[ks[i]]; }
+  o[ks.at(-1)] = val;
+}
+function toast(msg, isErr) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = "toast show" + (isErr ? " err" : "");
+  clearTimeout(t._tm); t._tm = setTimeout(() => t.classList.remove("show"), 3200);
+}
+function esc(s){ return String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+// ── 渲染 ─────────────────────────────────────────────
+function render() {
+  document.querySelectorAll("[data-path]").forEach(el => {
+    const v = getPath(state, el.dataset.path);
+    if (el.type === "checkbox") el.checked = !!v;
+    else el.value = v === null || v === undefined ? "" : v;
+  });
+  // 列表编辑器
+  document.querySelectorAll("[data-list]").forEach(el => {
+    const list = state[el.dataset.list] || [];
+    el.value = Array.isArray(list) ? list.join("\n") : String(list);
+  });
+  renderCommands(); renderMessages(); renderIntents(); updateScanPreview();
+}
+
+function renderIntents() {
+  const box = document.getElementById("intentChecks");
+  box.innerHTML = "";
+  INTENT_LABELS.forEach(([key, label]) => {
+    const wrap = document.createElement("label");
+    const cb = document.createElement("input"); cb.type = "checkbox";
+    cb.checked = !!(state.intents && state.intents[key]);
+    cb.addEventListener("change", () => { state.intents = state.intents || {}; state.intents[key] = cb.checked; });
+    wrap.append(cb, document.createTextNode(label));
+    box.appendChild(wrap);
+  });
+}
+
+function renderCommands() {
+  const grid = document.getElementById("cmdGrid"); grid.innerHTML = "";
+  CMD_LABELS.forEach(([key, label]) => {
+    const lab = document.createElement("label"); lab.className = "f";
+    const b = document.createElement("b"); b.textContent = `${key} · ${label}`;
+    const input = document.createElement("input"); input.type = "text";
+    input.value = ((state.commands || {})[key] || []).join(", ");
+    input.addEventListener("change", () => {
+      state.commands = state.commands || {};
+      state.commands[key] = input.value.split(/[,，\s]+/).map(s => s.trim()).filter(Boolean);
+      updateScanPreview();
+    });
+    lab.append(b, input); grid.appendChild(lab);
+  });
+}
+
+function renderMessages() {
+  const grid = document.getElementById("msgGrid"); grid.innerHTML = "";
+  const msgs = state.messages || {};
+  Object.keys(msgs).sort().forEach(key => {
+    const lab = document.createElement("label"); lab.className = "f"; lab.style.gridColumn = "1/-1";
+    const b = document.createElement("b"); b.textContent = key;
+    const ta = document.createElement("textarea"); ta.value = msgs[key] ?? "";
+    ta.style.minHeight = key === "help" ? "150px" : "56px";
+    ta.addEventListener("change", () => { state.messages[key] = ta.value; });
+    lab.append(b, ta); grid.appendChild(lab);
+  });
+}
+
+function updateScanPreview() {
+  const w = ((state.commands || {}).scan || ["扫描"])[0];
+  document.getElementById("scanPreview").textContent = `${w} example.com --depth 3`;
+}
+
+// ── 收集 / 加载 / 保存 ────────────────────────────────
+function collect() {
+  document.querySelectorAll("[data-path]").forEach(el => {
+    let v;
+    if (el.type === "checkbox") v = el.checked;
+    else if (el.type === "number") v = el.value === "" ? null : Number(el.value);
+    else v = el.value.trim();
+    setPath(state, el.dataset.path, v);
+  });
+  document.querySelectorAll("[data-list]").forEach(el => {
+    state[el.dataset.list] = el.value.split(/\n+/).map(s => s.trim()).filter(Boolean);
+  });
+  // 数字规整
+  ["web_port","bot_port","poll_interval","max_report_assets"].forEach(k =>
+    { if (typeof state[k] !== "number") { const n = parseInt(state[k], 10); state[k] = isNaN(n) ? null : n; } });
+  if (state.defaults && typeof state.defaults.depth !== "number") {
+    const n = parseInt(state.defaults.depth, 10);
+    state.defaults.depth = isNaN(n) ? null : n;
+  }
+  if (!state.messages || typeof state.messages !== "object") state.messages = {};
+  return state;
+}
+
+async function load() {
+  try {
+    const r = await fetch("/api/plugins/qqbot/config");
+    const d = await r.json();
+    state = deepMerge(DEFAULTS, d.config || {});
+  } catch (e) { toast("读取配置失败: " + e, true); state = deepMerge(DEFAULTS, {}); }
+  render();
+}
+
+async function save() {
+  try {
+    const body = JSON.stringify({ config: collect() });
+    const r = await fetch("/api/plugins/qqbot/config", {
+      method: "POST", headers: {"Content-Type": "application/json"}, body});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || d.error) throw new Error(d.error || ("HTTP " + r.status));
+    toast("✅ 已保存。凭据修改后可直接点击「启动机器人」，无需重启进程。");
+  } catch (e) { toast("保存失败: " + e.message, true); }
+}
+
+async function loadTasks() {
+  const tbody = document.querySelector("#taskTable tbody");
+  const empty = document.getElementById("taskEmpty");
+  try {
+    const r = await fetch("/api/tasks");
+    const list = await r.json();
+    tbody.innerHTML = "";
+    empty.hidden = list.length > 0;
+    list.slice(0, 12).forEach(t => {
+      const tr = document.createElement("tr");
+      const started = t.started_at ? new Date(t.started_at * 1000).toLocaleString() : "-";
+      tr.innerHTML = `<td>${esc(t.id)}</td>` +
+        `<td><span class="tag ${esc(t.status)}">${esc(t.status)}</span></td>` +
+        `<td>${esc((t.seeds || []).map(s => s.value).join(", ").slice(0, 60))}</td>` +
+        `<td>${esc(started)}</td>`;
+      tbody.appendChild(tr);
+    });
+  } catch (e) { empty.hidden = false; empty.textContent = "任务加载失败: " + e; }
+}
+
+document.getElementById("saveBtn").addEventListener("click", save);
+document.getElementById("refreshTasks").addEventListener("click", loadTasks);
+document.querySelectorAll(".pwd").forEach(p => p.querySelector(".eye")
+  .addEventListener("click", () => {
+    const inp = p.querySelector("input");
+    inp.type = inp.type === "password" ? "text" : "password";
+  }));
+load(); loadTasks();
+setInterval(loadTasks, 15000);
+
+// ── 机器人控制 ──────────────────────────────────────────
+const botStatusEl = document.getElementById("botStatus");
+const botStartBtn = document.getElementById("botStartBtn");
+const botStopBtn  = document.getElementById("botStopBtn");
+
+async function refreshBotStatus() {
+  try {
+    const r = await fetch("/api/plugins/qqbot/bot/status");
+    const d = await r.json();
+    if (d.running) {
+      botStatusEl.innerHTML = '运行中 <span style="color:var(--accent);font-weight:600">●</span> PID ' + d.pid;
+      botStatusEl.style.color = "var(--text)";
+      botStartBtn.disabled = true;
+      botStartBtn.textContent = "▶ 已启动";
+      botStopBtn.style.display = "";
+      botStopBtn.disabled = false;
+    } else {
+      botStatusEl.innerHTML = '未运行 <span style="color:#f87171;font-weight:600">●</span>';
+      botStatusEl.style.color = "var(--text2)";
+      botStartBtn.disabled = false;
+      botStartBtn.textContent = "▶ 启动机器人";
+      botStopBtn.style.display = "none";
+    }
+  } catch (e) {
+    botStatusEl.textContent = "状态未知: " + e;
+    botStartBtn.disabled = true;
+    botStopBtn.style.display = "none";
+  }
+}
+
+async function botAction(action) {
+  const btn = action === "start" ? botStartBtn : botStopBtn;
+  btn.disabled = true;
+  btn.textContent = action === "start" ? "启动中…" : "停止中…";
+  try {
+    const r = await fetch("/api/plugins/qqbot/bot/" + action, { method: "POST" });
+    const d = await r.json();
+    toast(d.ok ? ("✅ " + d.message) : ("❌ " + (d.message || "操作失败")), !d.ok);
+  } catch (e) { toast("❌ 请求失败: " + e, true); }
+  setTimeout(refreshBotStatus, 1500);
+}
+
+refreshBotStatus();
+setInterval(refreshBotStatus, 8000);
+</script>
+</body>
+</html>

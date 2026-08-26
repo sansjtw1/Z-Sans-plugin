@@ -1,0 +1,149 @@
+# ============================================================================
+# qqbot 插件默认配置（出厂值）
+#
+# 生效优先级（低 -> 高，逐层覆盖）:
+#   1. 本文件（出厂默认）
+#   2. breeding-config.yaml 中的 plugins.qqbot 段
+#   3. Web 控制台 qqbot 插件页保存的 output/plugin_config/qqbot.yaml
+#
+# 修改后需重启: python main.py --qqbot
+# ============================================================================
+
+enabled: true
+
+# ---- QQ 开放平台凭据（https://q.qq.com -> 开发设置）----
+# 鉴权只需要 AppID + AppSecret(clientSecret)：启动时会调用官方
+# getAppAccessToken 接口自动换取 access_token（有效期 7200 秒），
+# 运行期间由适配器在过期前自动续期，无需手工获取或填写。
+app_id: ""
+token: ""          # 选填！机器人令牌不参与鉴权，仅个别旧接口需要
+app_secret: ""     # 即 clientSecret / 开发设置页的「机器人密钥」
+
+# 鉴权端点（官方文档 getAppAccessToken；一般无需修改）
+auth_base: "https://api.bot.qq.com/app/getAppAccessToken"
+# 启动前鉴权自检：预先换取 access_token，凭据错误时直接给出原因并退出
+auth_check: true
+# 启动后短时间内因网络抖动(如 DNS 解析失败)异常退出时的自动重启次数
+startup_retries: 3
+
+# 沙箱环境：机器人未上线/仅在沙箱群测试时设为 true
+sandbox: false
+
+# true  = WebSocket 反向连接（推荐，无需公网回调地址）
+# false = WebHook 回调模式，需在 QQ 开放平台配置
+#         https://<bot_host>:<bot_port>/qq/webhook
+use_websocket: true
+
+# 订阅的事件意图（仅 WebSocket 模式生效；只能包含官方允许的键）
+intents:
+  c2c_group_at_messages: true   # 群聊@机器人消息 与 单聊消息
+  at_messages: true             # 频道@机器人消息（公域）
+  guild_messages: false         # 频道消息（私域机器人）
+  direct_message: false         # 频道私信
+
+# ---- 本地 Z-Sans Web 服务（zsansapi，--qqbot 会自动拉起）----
+web_host: "127.0.0.1"
+web_port: 8050                 # 与主程序 --port 同义；命令行 --port 优先
+web_password: ""               # 建议设置；非空时自动写入 ZSANS_WEB_PASSWORD
+
+# ---- NoneBot 监听参数（WebHook 模式才需对外可达）----
+bot_host: "127.0.0.1"
+bot_port: 8078                 # 命令行 --qqbot-port 优先
+
+# ---- 权限控制 ----
+allowed_users: []              # 可使用机器人的用户 openid 列表；空=不限制
+admins: []                     # 管理员：可停止任意任务、查询任意任务
+allowed_groups: []             # 可使用的群 openid / 频道 id；空=不限制
+
+# ---- 通过 QQ 启动扫描时的默认参数 ----
+defaults:
+  depth: null                  # 最大扫描深度；null=跟随 breeding-config.yaml
+  strategy: null               # priority_based / depth_first / breadth_first / time_based
+
+# ---- 任务跟踪与通知 ----
+poll_interval: 5               # 任务状态轮询间隔（秒）
+scan_timeout_hours: 24         # 轮询超时（小时），超时后停止跟踪该任务
+notify:
+  on_complete: true            # 扫描结束后把报告推送到发起会话
+max_report_assets: 10          # 报告摘要中最多列出的资产条数
+
+# ---- 自定义指令词（每个指令支持多个别名，命中任意一个即可）----
+commands:
+  help:   ["帮助", "help"]
+  scan:   ["扫描", "scan"]
+  stop:   ["停止", "stop"]
+  status: ["状态", "status"]
+  tasks:  ["任务", "tasks"]
+  report: ["报告", "report"]
+
+# ---- 自定义回复模板 ----
+# 占位符在运行时填充，详见插件 README 的「回复模板」章节。
+messages:
+  permission_denied: "⛔ 你没有权限使用本机器人。"
+  group_denied: "⛔ 本群未开通机器人服务。"
+  unknown_command: "❓ 未知指令「{command}」。发送 {help_cmd} 查看帮助。"
+  help: |-
+    ╔════════════╗
+    ║  🤖 Z-Sans 资产探测引擎  ║
+    ╚════════════╝
+    
+    📌 扫描指令
+    ──────────────
+    {scan_cmd} <目标> [--depth N]
+    {scan_cmd} example.com
+    {scan_cmd} https://example.com --depth 2
+    {scan_cmd} 1.2.3.4 example.com
+    
+    📌 任务管理
+    ──────────────
+    {stop_cmd} [任务ID]      终止扫描
+    {status_cmd} [任务ID]    查看进度
+    {tasks_cmd}              任务列表
+    {report_cmd} <任务ID>    获取报告
+    
+    📌 其他
+    ──────────────
+    {help_cmd}               显示本帮助
+    
+    💡 提示: 直接发「扫描 example.com」即可开始任务
+  scan_usage: |-
+    ⚠️ 用法: {scan_cmd} <目标> [--depth N]
+    ──────────────
+    示例:
+      {scan_cmd} example.com
+      {scan_cmd} https://example.com --depth 2
+      {scan_cmd} 1.2.3.4 example.com
+  scan_started: |-
+    ✅ 扫描已启动
+    ──────────────
+    🆔 任务: {task_id}
+    🎯 目标: {seeds}
+    📊 深度: {depth}
+    ──────────────
+    完成后自动推送报告
+    也可发: {report_cmd} {task_id}
+  scan_invalid: "⚠️ 以下目标无效已忽略:\n{invalid}"
+  scan_failed: "❌ 启动扫描失败: {error}"
+  stop_usage: "⚠️ 用法: {stop_cmd} [任务ID]"
+  stop_ok: "⏹ 已发送停止指令，任务 {task_id} 正在终止…"
+  stop_fail: "❌ 无法停止任务 {task_id}: {reason}"
+  stop_forbidden: "⛔ 只有管理员可以停止他人的任务。"
+  status_not_found: "❌ 未找到任务 {task_id}。"
+  status_line: |-
+    📡 任务 {task_id}
+    ──────────────
+    状态: {status}
+    目标: {seeds}
+    进度: {processed} 已处理 | {found} 新发现 | {errors} 错误
+    耗时: {elapsed}
+  tasks_empty: "📭 暂无扫描任务。"
+  tasks_header: "📋 最近任务:"
+  task_row: "  [{status}] {task_id} — {seeds}"
+  report_not_found: "❌ 未找到任务 {task_id} 的报告。"
+  report_not_ready: "⏳ 任务 {task_id} 尚未完成（当前: {status}）。"
+  notify_complete: "✅ 扫描完成!\n──────────────\n{summary}"
+  notify_stopped: "⏹ 扫描已终止。\n──────────────\n{summary}"
+  notify_failed: "❌ 扫描失败: {error}\n{summary}"
+  notify_send_later: "(主动推送失败时，可随时发送 {report_cmd} {task_id} 获取报告)"
+  watch_timeout: "⚠️ 等待任务 {task_id} 超过 {hours} 小时，已停止跟踪。可稍后用 {report_cmd} {task_id} 查询。"
+  web_unready: "❌ 本地 Z-Sans Web 服务不可用: {error}"

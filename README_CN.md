@@ -21,6 +21,7 @@
 | [domain_whois](domain_whois/) | 目录插件 | EN | 通过免费全球化 RDAP 服务为域名资产补充 WHOIS 注册信息 | 网络 |
 | [ip_geo](ip_geo.py) | 单文件 | EN | 通过 ip-api.com 查询 IP 资产的地理位置并写入属性 | 网络 |
 | [ip_info_cn](ip_info_cn.py) | 单文件 | 中文 | 通过 ip9.com.cn 查询 IP 归属地，输出中文信息 | 网络 |
+| [qqbot](qqbot/) | 目录插件 | 中文 | QQ 官方机器人（nonebot-adapter-qq）：远程启动/终止扫描、获取报告；自动拉起 Web 服务；提供 `--qqbot` | nonebot2 + adapter-qq（Python ≥ 3.10）|
 | [resource_collector](resource_collector.py) | 单文件 | EN | 下载扫描发现的文件/JS 资源到本地（run_dir 下） | 网络 |
 | [security_headers](security_headers.py) | 单文件 | EN | 探测 URL 资产的 HTTP 安全响应头并评分 | 网络 |
 | [toolbox](toolbox/) | 目录插件 | EN | 通用外部工具管理器（subfinder/naabu/EHole 及自定义工具），提供 `--tools` | GitHub 下载 |

@@ -21,6 +21,7 @@ This repository is the official plugin repository for the **Z-Sans Asset Breedin
 | [domain_whois](domain_whois/) | Directory | EN | Enriches domain assets with WHOIS registration info via free global RDAP services | Network |
 | [ip_geo](ip_geo.py) | Single‑file | EN | Queries IP geographic location via ip-api.com and writes to asset attributes | Network |
 | [ip_info_cn](ip_info_cn.py) | Single‑file | zh_CN | Queries IP ownership via ip9.com.cn and outputs Chinese location information | Network |
+| [qqbot](qqbot/) | Directory | zh_CN | QQ official bot (nonebot-adapter-qq): remote scan control & report delivery via QQ; auto-starts web service; provides `--qqbot` | nonebot2 + adapter-qq (Python ≥ 3.10) |
 | [resource_collector](resource_collector.py) | Single‑file | EN | Downloads discovered files/JS resources locally (under `run_dir`) | Network |
 | [security_headers](security_headers.py) | Single‑file | EN | Probes HTTP security response headers of URL assets and scores them | Network |
 | [toolbox](toolbox/) | Directory | EN | Generic external tool manager (subfinder/naabu/EHole and custom tools), provides `--tools` | GitHub downloads |
